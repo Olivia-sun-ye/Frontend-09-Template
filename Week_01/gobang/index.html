@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>双人五子棋</title>
+    <style>
+        #board {
+            border: 2px solid black;
+            border-radius: 20px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        #game {
+            text-align: center;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+
+            vertical-align: middle;
+            line-height: 40px;
+
+            text-align: center;
+            font-size: 20px;
+
+            display: inline-block;
+            background-image: url("./cross.svg");
+
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game">
+        <h1>双人五子棋</h1>
+        <div id="board"></div>
+    </div>
+
+    <script>
+        let row = 20;
+        let col = 20;
+        let color = 1;
+        let pattern = new Array(col * row).fill(0);
+
+        function start() {
+            pattern = new Array(col * row).fill(0);
+            color = 1;
+            show();
+        }
+
+        function show() {
+            let board = document.getElementById("board");
+            board.innerHTML = "";
+
+            for (let i = 0; i < row; i++) {
+                for (let j = 0; j < col; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.setAttribute("id", String(i * col + j))
+                    cell.innerText =
+                        pattern[i * col + j] == 2 ? "⚪" :
+                            pattern[i * col + j] == 1 ? "⚫" : "";
+                    cell.addEventListener("click", () => move(j, i));
+                    board.appendChild(cell);
+                }
+                board.appendChild(document.createElement("br"));
+            }
+        }
+        function hint(x, y) {
+            let cell = document.getElementById(String(y * col + x));
+            cell.style.backgroundImage = "url('./hint.svg')"
+        }
+
+        function move(x, y) {
+            pattern[y * col + x] = color;
+            show();
+            hint(x, y)
+            if (check(5, pattern, color, y, x)) {
+                setTimeout(() => {
+                    var okay = confirm((color == 2 ? "⚪" : "⚫") + " is winner!, play again ?")
+                    if (okay) {
+                        start()
+                    }
+                }, 0);
+
+                return;
+            }
+            color = 3 - color;
+        }
+
+        function check(target, pattern, color, y, x) {
+            // check col
+            {
+                let count = 1;
+
+                let j = x;
+                let i = y + 1;
+                while (i < row) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i++;
+                        if (count === target) return true;
+                    } else break;
+                }
+
+                i = y - 1;
+                while (i >= 0) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i--;
+                        if (count === target) return true;
+                    } else break;
+                }
+
+            }
+
+            // check row
+            {
+                let count = 1;
+                let i = y;
+                let j = x + 1;
+                while (j < col) {
+                    if (pattern[i * col + j] === color) {
+                        count++; j++;
+                        if (count === target) return true;
+                    } else break;
+                }
+
+                j = x - 1;
+                while (j >= 0) {
+                    if (pattern[i * col + j] === color) {
+                        count++; j--;
+                        if (count === target) return true;
+                    } else break;
+                }
+            }
+
+            // check ↘
+            {
+                let count = 1;
+                let i = y + 1;
+                let j = x + 1;
+                while (i < row && j < col) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i++; j++;
+                        if (count === target) return true;
+                    } else break;
+                }
+
+                i = y - 1;
+                j = x - 1;
+
+                while (i >= 0 && j >= 0) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i--; j--;
+                        if (count === target) return true;
+                    } else break;
+                }
+            }
+
+            // check ↗
+            {
+                let count = 1;
+                let i = y + 1;
+                let j = x - 1;
+                while (i < row && j >= 0) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i++; j--;
+                        if (count === target) return true;
+                    } else break;
+                }
+
+                i = y - 1;
+                j = x + 1;
+                while (i >= 0 && j < col) {
+                    if (pattern[i * col + j] === color) {
+                        count++; i--; j++;
+                        if (count === target) return true;
+                    } else break;
+                }
+            }
+            return false;
+        }
+        start()
+    </script>
+</body>
+
+</html>
