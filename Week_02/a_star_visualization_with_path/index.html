@@ -1,0 +1,168 @@
+<html>
+<style>
+    .cell {
+        display: inline-block;
+        line-height: 7px;
+        width: 6px;
+        height: 6px;
+        background-color: gray;
+        border-bottom: solid 1px white;
+        border-right: solid 1px white;
+        vertical-align: top;
+    }
+
+    #container {
+        width: 701px;
+    }
+</style>
+
+<body>
+    <div id="container">
+    </div>
+    <button onclick="localStorage['map'] = JSON.stringify(map)">save</button>
+    <script>
+        class Sorted {
+            constructor(data, cmp) {
+                this.data = data || []
+                this.compare = cmp || ((a, b) => { return a - b })
+            }
+            take() {
+                if (this.data.length <= 0) {
+                    return
+                }
+                let min = this.data[0]
+                let minIdx = 0
+                for (let i = 1; i < this.data.length; ++i) {
+                    if (this.compare(this.data[i], min) < 0) {
+                        min = this.data[i]
+                        minIdx = i
+                    }
+                }
+                this.data[minIdx] = this.data[this.data.length - 1]
+                this.data.pop()
+                return min
+            }
+            give(point) {
+                this.data.push(point)
+            }
+            next() {
+                return this.data.length > 0
+            }
+        }
+
+        let width = 100;
+        let height = 100;
+        let area = width * height
+        let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(area).fill(0);
+
+        let container = document.getElementById("container")
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                let cell = document.createElement("div")
+                cell.classList.add("cell")
+                if (map[y * width + x] === 1) {
+                    cell.style.backgroundColor = "black"
+                }
+                cell.addEventListener("mousemove", () => {
+                    if (mousedown) {
+                        if (clear) {
+                            cell.style.backgroundColor = ""
+                            map[y * width + x] = 0
+                        } else {
+                            cell.style.backgroundColor = "black"
+                            map[y * width + x] = 1
+                        }
+                    }
+                })
+                container.appendChild(cell)
+
+            }
+        }
+        let mousedown = false;
+        let clear = false;
+        document.addEventListener("mousedown", (e) => {
+            mousedown = true;
+            clear = (e.which === 3)
+        });
+        document.addEventListener("mouseup", (e) => {
+            mousedown = false;
+
+        });
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault()
+        });
+
+        async function sleep(t) {
+            return new Promise((resolve, reject) => {
+                setTimeout(resolve, t)
+            })
+        }
+
+        function insert(map, queue, from, to) {
+            let { x, y } = to
+            // out bound
+            if (x < 0 || x > width - 1) {
+                return
+            }
+            if (y < 0 || y > height - 1) {
+                return
+            }
+            // wall
+            if (map[width * y + x] === 1) {
+                return
+            }
+            // before reached
+            if (map[width * y + x]) {
+                return
+            }
+            map[width * y + x] = from
+            queue.give(to)
+        }
+
+        async function findPath(map, start, end) {
+
+            let table = Object.create(map)
+            let queue = new Sorted([start], (a, b) => distance(a) - distance(b))
+
+            function distance(point) {
+                return (end.x - point.x) ** 2 + (end.y - point.y) ** 2
+            }
+
+            while (queue.next()) {
+                let point = queue.take()
+                if (point.x === end.x && point.y === end.x) {
+                    console.log("reached")
+                    // log path
+                    let path = []
+                    let cur = end
+                    while (true) {
+                        document.getElementsByClassName("cell")[width * cur.y + cur.x].style.backgroundColor = "purple"
+                        path.push(cur)
+                        if (cur.x === start.x && cur.y === start.y) {
+                            break
+                        }
+                        cur = table[width * cur.y + cur.x]
+                    }
+                    return path
+                }
+
+                await sleep(20);
+                document.getElementsByClassName("cell")[width * point.y + point.x].style.backgroundColor = "lightgreen"
+
+                insert(table, queue, point, { x: point.x - 1, y: point.y });
+                insert(table, queue, point, { x: point.x + 1, y: point.y });
+                insert(table, queue, point, { x: point.x, y: point.y - 1 });
+                insert(table, queue, point, { x: point.x, y: point.y + 1 });
+
+                insert(table, queue, point, { x: point.x - 1, y: point.y - 1 });
+                insert(table, queue, point, { x: point.x + 1, y: point.y - 1 });
+                insert(table, queue, point, { x: point.x - 1, y: point.y + 1 });
+                insert(table, queue, point, { x: point.x + 1, y: point.y + 1 });
+
+            }
+
+        }
+    </script>
+</body>
+
+</html>
