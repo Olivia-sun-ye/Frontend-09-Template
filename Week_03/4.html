@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+</body>
+<script>
+    let regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
+    let dict = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"]
+
+    function* tokenize(source) {
+        let result = null
+        let lastIndex = 0
+
+        while (true) {
+            lastIndex = regexp.lastIndex
+            result = regexp.exec(source)
+
+            if (!result) {
+                break
+            }
+
+            if (regexp.lastIndex - lastIndex > result[0].length) {
+                break;
+            }
+
+            let token = {
+                type: null,
+                vlaue: null,
+            }
+
+            for (let i = 1; i <= dict.length; ++i) {
+                if (result[i]) {
+                    token.type = dict[i - 1]
+                }
+            }
+            token.vlaue = result[0]
+            yield token
+        }
+        yield {
+            type: "EOF",
+        }
+    }
+    let source = []
+    for (let token of tokenize("1 + 2 + 3 + 4")) {
+        if (token.type !== "Whitespace" && token.type !== "LineTerminator") {
+            source.push(token)
+        }
+    }
+
+    function Expression(source) {
+        if (source[0].type === "AddactiveExpression" && source[1] && source[1].type === "EOF") {
+            let node = {
+                type: "Expression ",
+                children: [source.shift(), source.shift()]
+            }
+            source.unshift(node)
+            return node
+        }
+        AddactiveExpression(source)
+        return Expression(source)
+    }
+
+    function AddactiveExpression(source) {
+        if (source[0].type === "MultiplicativeExpression") {
+            let node = {
+                type: "AddactiveExpression",
+                children: [source[0]]
+            }
+            source[0] = node
+            return AddactiveExpression(source)
+        }
+        if (source[0].type === "AddactiveExpression" && source[1] && source[1].type === "+") {
+            let node = {
+                type: "AddactiveExpression",
+                operator: "+",
+                children: []
+            }
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            MultiplicativeExpression(source)
+            node.children.push(source.shift())
+            source.unshift(node)
+            return AddactiveExpression(source)
+        }
+        if (source[0].type === "AddactiveExpression" && source[1] && source[1].type === "-") {
+            let node = {
+                type: "AddactiveExpression",
+                operator: "-",
+                children: []
+            }
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            MultiplicativeExpression(source)
+            node.children.push(source.shift())
+            source.unshift(node)
+            return AddactiveExpression(source)
+        }
+        if (source[0].type === "AddactiveExpression") {
+            return source[0]
+        }
+
+        MultiplicativeExpression(source)
+        return AddactiveExpression(source)
+
+    }
+
+    function MultiplicativeExpression(source) {
+        if (source[0].type === "Number") {
+            let node = {
+                type: "MultiplicativeExpression",
+                children: [source[0]]
+            }
+            source[0] = node
+            return MultiplicativeExpression(source)
+        }
+        if (source[0].type === "MultiplicativeExpression" && source[1] && source[1].type === "*") {
+            let node = {
+                type: "MultiplicativeExpression",
+                operator: "*",
+                children: []
+            }
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            source.unshift(node)
+            return MultiplicativeExpression(source)
+        }
+        if (source[0].type === "MultiplicativeExpression" && source[1] && source[1].type === "/") {
+            let node = {
+                type: "MultiplicativeExpression",
+                operator: "/",
+                children: []
+            }
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            node.children.push(source.shift())
+            source.unshift(node)
+            return MultiplicativeExpression(source)
+        }
+        if (source[0].type === "MultiplicativeExpression") {
+            return source[0]
+        }
+
+        return MultiplicativeExpression(source)
+
+    }
+    console.log(Expression(source))
+</script>
+
+</html>
