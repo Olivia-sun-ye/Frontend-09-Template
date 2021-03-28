@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>KMP</title>
+</head>
+
+<body>
+    <div>
+        <input type="text" name="source" id="source">
+        <input type="text" name="target" id="target">
+        <button onclick="search()">Find</button>
+    </div>
+    <p id="ans"></p>
+
+    <script>
+        function kmp(source, target) {
+            if (target === "") {
+                return 0
+            }
+            let table = new Array(target.length).fill(0)
+            for (let i = 1, j = 0; i < target.length;) {
+                if (target[i] === target[j]) {
+                    i++;
+                    j++;
+                    if (i === target.length) {
+                        break
+                    }
+                    table[i] = j
+                } else {
+                    if (j > 0) {
+                        j = table[j]
+                    } else {
+                        i++
+                    }
+                }
+
+            }
+
+            console.log("kmp table: ", table)
+
+            for (let i = 0, j = 0; i < source.length;) {
+                if (source[i] === target[j]) {
+                    i++;
+                    j++;
+                    if (j === target.length) {
+                        return i - j;
+                    }
+                } else {
+                    if (j > 0) {
+                        j = table[j]
+                    } else {
+                        i++
+                    }
+                }
+            }
+            return -1
+        }
+
+        function search() {
+            let source = document.getElementById("source").value;
+            let target = document.getElementById("target").value;
+
+            let idx = kmp(source, target)
+            let ans = ""
+            if (idx >= 0) {
+                ans = `find ${target} in ${source} index ${idx}`
+            } else {
+                ans = `could not find ${target} in ${source}`
+            }
+            document.getElementById("ans").innerText = ans
+        }
+    </script>
+</body>
+
+</html>
