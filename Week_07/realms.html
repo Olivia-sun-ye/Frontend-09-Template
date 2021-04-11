@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <title>
+        Realms
+    </title>
+    <style>
+        .g6-tooltip {
+            padding: 10px 6px;
+            color: #444;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e2e2e2;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"> </div>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g6/3.7.1/dist/g6.min.js"></script>
+    <script>
+
+        function getDesc(key, obj) {
+            let res = key + ":\n"
+            for (let prop in obj) {
+                res = res + prop + ": " + obj[prop]
+            }
+            return res
+        }
+        let frame = document.createElement("iframe")
+        document.documentElement.appendChild(frame)
+        frame.style.visibility = "hidden"
+        frame = frame.contentWindow
+
+        console.log(frame)
+        const data = {
+            nodes: [
+
+            ],
+            edges: [
+
+            ],
+        };
+
+        for (let key of Object.keys(frame)) {
+            data.nodes.push({
+                id: key,
+                desc: getDesc(key, frame[key]),
+            })
+            data.edges.push({
+                source: 'Realms',
+                target: key,
+            })
+
+        }
+        data.nodes.push({
+            id: 'Realms',
+            desc: 'Realms',
+        })
+
+
+        const graph = new G6.Graph({
+            container: 'container',
+            width: 900,
+            height: 900,
+            modes: {
+                default: [
+                    {
+                        type: 'tooltip',
+                        formatText(node) {
+                            return node.desc;
+                        },
+                    },
+                ],
+
+            },
+            layout: {
+                type: 'radial',
+                linkDistance: 50,         // 可选，边长
+                maxIteration: 1000,       // 可选
+                focusNode: 'Realms',      // 可选
+                unitRadius: 100,          // 可选
+                preventOverlap: true,     // 可选，必须配合 nodeSize
+                nodeSize: 30,             // 可选
+                strictRadial: false,      // 可选
+                workerEnabled: true       // 可选，开启 web-worker
+            },
+
+        });
+        console.log(data)
+        graph.data(data);
+        graph.render();
+    </script>
+</body>
+
+</html>
